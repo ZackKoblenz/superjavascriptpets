@@ -4,7 +4,8 @@ Array.prototype.random = function () {
 
 //Root Class
     class Pet {
-        constructor(attack, health, level, description, tier, id){
+        constructor(type, attack, health, level, description, tier, id){
+            this.type = type;
             this.attack = attack;
             this.health = health;
             this.level = level;
@@ -107,6 +108,7 @@ Array.prototype.random = function () {
     class Sheep extends summonPet {
         constructor(){
             super()
+            this.type = "sheep"
             this.health = 2;
             this.attack = 2;
             this.summons = 2;
@@ -121,6 +123,7 @@ Array.prototype.random = function () {
     class Ram extends Pet {
         constructor(level){
             super()
+            this.type = "ram"
             this.health = 2
             this.attack = 2
             this.level = level;
@@ -132,6 +135,7 @@ Array.prototype.random = function () {
     class Ant extends statsPet {
         constructor(){
             super()
+            this.type = "ant"
             this.attack = 2
             this.health = 2
             this.level = 1
@@ -147,6 +151,7 @@ Array.prototype.random = function () {
     class Hedgehog extends Pet {
         constructor(){
             super()
+            this.type = "hedgehod"
             this.level = 1
             this.abilityDamage = 2 * this.level
             //more hedgehog specific stats
@@ -198,12 +203,22 @@ Array.prototype.random = function () {
         }
     }
 //Game Loop Logic
+let wins = 0
+let health = 5
+let round = 1
+let gold = 10
+let gameBoard = shop(gold, round).initialRoll
     function main(){
-        let round = 1;
-        let gold = 10
-        let shop = new Shop(4, gold, 3, round);
-        let gameBoard = shop.initialRoll;
-        let enemyGameboard = shop.roll();
+        console.log("game running")
+        while(wins < 10 && health > 0 && round < 100){
+            gameBoard = shop(gold, round).roll()
+            console.log(gameBoard)
+            match(wins, gameBoard, round)
+            console.log(wins)
+            console.log(round)
+        }
+        //let shop = new Shop(4, gold, 3, round);
+        //let enemyGameboard = shop.roll();
         //GameLoop Test
             // console.log(gameBoard)
             // gameBoard[1].faint(gameBoard)
@@ -221,16 +236,86 @@ Array.prototype.random = function () {
             // console.log(`Enemy:`)
             // console.log(enemyGameboard)
 
-    // move reposition into pet class
-    // add faint check to reposition
-    // if pet is faint, removePet not move
-        function rePosition(gameBoard, initialPosition, newPosition){
-            let holdingVariable = gameBoard[initialPosition]
-            gameBoard.splice(initialPosition, 1)
-            gameBoard.splice(newPosition, 0, holdingVariable)
+    }
+    function shop(gold, currentRound){
+        //make gold dynamic to account for gold pets
+        let roundGold = gold
+        let tier = 1
+        if(currentRound > 12){
+            tier = 6
+        }else if(currentRound == 1){
+            tier = 1
+        }
+        else{
+            tier = currentRound / 2 
+        }
+        //Make Shop Plots dynamic (first param)
+        let shop = new Shop(5, roundGold, tier, currentRound)
+        console.log("game board generated")
+        
+        return shop
+    }
+    function match(wins, gameBoard, currentRound){
+        console.log("match started")
+        let winBool = false;
+        let opponentGameBoard = findOpponent(currentRound)
+        let gameBoardCopy = gameBoard.slice()
+        fight(gameBoardCopy, opponentGameBoard)
+        if(typeof(gameBoardCopy.at(0)) == "undefined" && typeof(opponentGameBoard.at(0)) == "undefined"){
+            wins = wins
+            console.log("draw")
+        }
+        else if(typeof(gameBoardCopy.at(0)) == "undefined"){
+            wins = wins
+            health--
+            console.log("loss")
+        }
+        else{
+            winBool = true
+            wins++
+            console.log("win")
+        }
+        if(wins === 10){
+            winCondition(gameBoard)
+        }
+        else if(health === 0){
+            loseCondition(gameBoard)
+        }else {
+            round++
         }
     }
-
-
+    function findOpponent(currentRound){
+        console.log("finding opponent...")
+        //Reminder that eventually health stage should be taken into account for finding opponent team
+        let healthCheck = health;
+        let opponentShop = shop(10, currentRound)
+        //let opponentShop = new Shop(5, 10, tier, currentRound)
+        let opponentGameBoard = opponentShop.initialRoll
+        console.log("opponent team generated")
+        return opponentGameBoard
+    }
+    function fight(gameBoardCopy, opponentGameBoard){
+        console.log("fight started")
+        //console.log(gameBoard, opponentGameBoard)
+        while(typeof(gameBoard[0]) != "undefined" || typeof(opponentGameBoard[0]) != "undefined"){
+            // Write Code To Simulate Fight
+            gameBoardCopy[0].health -= opponentGameBoard[0].attack
+            opponentGameBoard[0].health -= gameBoardCopy[0].attack
+            gameBoardCopy[0].checkDeath(gameBoardCopy)
+            opponentGameBoard[0].checkDeath(opponentGameBoard)
+            //create slowdown options to allow fight to be watchable and not an instant calculation
+            if (typeof(gameBoardCopy[0]) == "undefined" || typeof(opponentGameBoard[0]) == "undefined"){
+                console.log("gameboard empty, player loss")
+                break
+            }
+        }
+    }
+    function winCondition(gameBoard){
+        console.log(`congratulations, you won with team ${gameBoard}`)
+    }
+    function loseCondition(gameBoard){
+        let finalGameBoard = JSON.stringify(gameBoard)
+        console.log(`you lost with team ${finalGameBoard}`)
+    }
 
 main()
