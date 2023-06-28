@@ -4,20 +4,23 @@ Array.prototype.random = function () {
 
 //Root Class
     class Pet {
-        constructor(type, attack, health, level, description, tier, id){
+        constructor(type, effect, attack, health, level, description, tier, perk){
             this.type = type;
+            this.effect = effect;
             this.attack = attack;
             this.health = health;
             this.level = level;
             this.description = description;
             this.tier = tier;
+            this.perk = perk;
             this.rollable = true;
             this.cost = 3;
             this.xp = 0;
             this.id = Math.floor(Math.random() * Math.floor(Math.random() * Date.now()));
         }
-        sell(){
-
+        sell(gold, gameBoard){
+            gold++
+            this.removePet(gameBoard, this.positionCheck(gameBoard))
         }
         faint(gameBoard){
             this.removePet(gameBoard, this.positionCheck(gameBoard))
@@ -59,11 +62,21 @@ Array.prototype.random = function () {
             }
         }
     }
+    class Food {
+        constructor(perk, attack, health, holdable, tier){
+            this.perk = perk;
+            this.attack = attack;
+            this.health = health;
+            this.holdable = holdable;
+            this.tier = tier;
+        }
 
+    }
 //Group Classes
     class summonPet extends Pet {
         constructor(summons, summonAnimal){
             super()
+            this.effect = "summon"
             this.summons = summons;
             this.summonAnimal = summonAnimal;
         }
@@ -88,6 +101,7 @@ Array.prototype.random = function () {
     class statsPet extends Pet {
         constructor(attackIncrease, healthIncrease){
             super()
+            this.effect = "stats"
             this.attackIncrease = attackIncrease;
             this.healthIncrease = healthIncrease;
         }
@@ -99,11 +113,51 @@ Array.prototype.random = function () {
                 this.removePet(gameBoard, this.positionCheck(gameBoard))
             //}, 3000)
 
-            console.log("stats pet died for you")
+            // console.log("stats pet died for you")
         }
 
     }
 
+    class goldPet extends Pet {
+        constructor(gold){
+            super()
+            this.effect = "gold"
+            this.gold = gold
+        }
+        giveGold(gold){
+            gold += this.gold
+        }
+    }
+
+    class startOfRoundPet extends Pet {
+        constructor(){
+            super()
+            this.effect = "startOfRound"
+        }
+        onRoundStart(){
+
+        }
+    }
+
+    class startOfBattlePet extends Pet {
+        constructor(){
+            super()
+            this.effect = "startOfBattle"
+        }
+        onBattleStart(){
+
+        }
+    }
+
+    class faintPet extends Pet {
+        constructor(){
+            super()
+            this.effect = "faint"
+        }
+        onFaint(){
+
+        }
+    }
 //Individual Classes
     class Sheep extends summonPet {
         constructor(){
@@ -174,24 +228,36 @@ Array.prototype.random = function () {
             // }
         }
     }
-
+//Food Classes
+    class Apple extends Food{
+        constructor(){
+            super()
+            this.attack = 1
+            this.health = 1
+            this.tier = 1
+        }
+    }
 //Shop Classes
     let turtlePack = ["new Sheep()", "new Ram()", "new Ant()"]
+    let turtlePackFood = ["new Apple()"]
 
     class Shop{
-        constructor(shopPlots, gold, tier, round){
-            this.shopPlots = shopPlots; 
+        constructor(petPlots, foodPlots, gold, tier, round){
+            this.petPlots = petPlots; 
+            this.foodPlots = foodPlots;
             this.gold = gold;
             this.tier = tier;
             this.round = round;
-            this.initialRoll = this.roll();
+            this.roll = this.roll()
+            this.initialRoll = this.roll;
         }
         buy(){
 
         }
         roll(){
             let arrayOfPets = []
-            for (let i = 0; i < this.shopPlots; i++){
+            let arrayOfFood = []
+            for (let i = 0; i < this.petPlots; i++){
                 let pickedPet = eval(turtlePack.random())
                 if(pickedPet.rollable === true && pickedPet.tier <= this.tier){
                     arrayOfPets.push(pickedPet)
@@ -199,7 +265,29 @@ Array.prototype.random = function () {
                     i--
                 }
             }
-            return arrayOfPets
+            for (let i = 0; i < this.foodPlots; i++){
+                let pickedFood = eval(turtlePackFood.random())
+                if(pickedFood.tier <= this.tier){
+                    arrayOfFood.push(pickedFood)
+                }else{
+                    i--
+                }
+            }
+
+            let objectOfPetsAndFood = {
+                pets: arrayOfPets,
+                food: arrayOfFood
+            }
+            return objectOfPetsAndFood
+        }
+        freeze(){
+            // I currently have no idea how to write the logic for this
+            // Currently I replace the whole shop roll with ... this.roll okay got it
+            // this.roll = this.roll()
+            // the freeze function will add the frozen boolean to an item in the shop
+            // im thinking we change the arrayofpets and arrayoffood to objects with a frozen property
+            // from there the loops that fill the objects also check if there are any frozen property items in the 
+            // this.roll 
         }
     }
 //Game Loop Logic
@@ -207,15 +295,16 @@ let wins = 0
 let health = 5
 let round = 1
 let gold = 10
-let gameBoard = shop(gold, round).initialRoll
+let gameBoard = [new Pet("Gorilla", 10, 10, 2, "is a gorilla", 4),new Pet("Gorilla", 10, 10, 2, "is a gorilla", 4),new Pet("Gorilla", 10, 10, 2, "is a gorilla", 4),new Pet("Gorilla", 10, 10, 2, "is a gorilla", 4),new Pet("Gorilla", 10, 10, 2, "is a gorilla", 4)]// shop(gold, round).initialRoll
     function main(){
         console.log("game running")
-        while(wins < 10 && health > 0 && round < 100){
-            gameBoard = shop(gold, round).roll()
+        while(wins < 10 && health > 0 && round < 11){
+            // gameBoard = shop(gold, round).roll()
             console.log(gameBoard)
-            match(wins, gameBoard, round)
-            console.log(wins)
-            console.log(round)
+            console.log(`Current Round ${round}`)
+            match()
+            console.log(`Current wins: ${wins}`)
+            console.log(`Upcoming round ${round}`)
         }
         //let shop = new Shop(4, gold, 3, round);
         //let enemyGameboard = shop.roll();
@@ -237,36 +326,51 @@ let gameBoard = shop(gold, round).initialRoll
             // console.log(enemyGameboard)
 
     }
-    function shop(gold, currentRound){
+    function shop(){
         //make gold dynamic to account for gold pets
-        let roundGold = gold
         let tier = 1
-        if(currentRound > 12){
+        let petPlots = 0
+        let foodPlots = 0
+
+        if(round < 5){
+            petPlots = 3
+            foodPlots = 1
+        }
+            else if(round < 9){
+                petPlots = 4
+                foodPlots = 2
+            }
+                else{
+                    petPlots = 5
+                    foodPlots = 2
+                }
+
+        if(round > 12){
             tier = 6
-        }else if(currentRound == 1){
-            tier = 1
         }
-        else{
-            tier = currentRound / 2 
-        }
+            else if(round == 1){
+                tier = 1
+            }
+                else{
+                    tier = round / 2 
+                }
         //Make Shop Plots dynamic (first param)
-        let shop = new Shop(5, roundGold, tier, currentRound)
+        let shop = new Shop(petPlots, foodPlots, gold, tier, round)
         console.log("game board generated")
-        
+        console.log(shop)
         return shop
     }
-    function match(wins, gameBoard, currentRound){
+
+    function match(){
         console.log("match started")
         let winBool = false;
-        let opponentGameBoard = findOpponent(currentRound)
+        let opponentGameBoard = findOpponent()
         let gameBoardCopy = gameBoard.slice()
         fight(gameBoardCopy, opponentGameBoard)
         if(typeof(gameBoardCopy.at(0)) == "undefined" && typeof(opponentGameBoard.at(0)) == "undefined"){
-            wins = wins
             console.log("draw")
         }
         else if(typeof(gameBoardCopy.at(0)) == "undefined"){
-            wins = wins
             health--
             console.log("loss")
         }
@@ -284,25 +388,48 @@ let gameBoard = shop(gold, round).initialRoll
             round++
         }
     }
-    function findOpponent(currentRound){
+    function findOpponent(){
         console.log("finding opponent...")
         //Reminder that eventually health stage should be taken into account for finding opponent team
         let healthCheck = health;
-        let opponentShop = shop(10, currentRound)
+        let opponentShop = shop()
         //let opponentShop = new Shop(5, 10, tier, currentRound)
-        let opponentGameBoard = opponentShop.initialRoll
+        let opponentGameBoard = opponentShop.initialRoll.pets
         console.log("opponent team generated")
         return opponentGameBoard
     }
     function fight(gameBoardCopy, opponentGameBoard){
         console.log("fight started")
         //console.log(gameBoard, opponentGameBoard)
-        while(typeof(gameBoard[0]) != "undefined" || typeof(opponentGameBoard[0]) != "undefined"){
+        while(typeof(gameBoardCopy[0]) != "undefined" && typeof(opponentGameBoard[0]) != "undefined"){
             // Write Code To Simulate Fight
-            gameBoardCopy[0].health -= opponentGameBoard[0].attack
-            opponentGameBoard[0].health -= gameBoardCopy[0].attack
-            gameBoardCopy[0].checkDeath(gameBoardCopy)
-            opponentGameBoard[0].checkDeath(opponentGameBoard)
+                gameBoardCopy[0].health -= opponentGameBoard[0].attack
+                opponentGameBoard[0].health -= gameBoardCopy[0].attack
+                gameBoardCopy[0].checkDeath(gameBoardCopy)
+                opponentGameBoard[0].checkDeath(opponentGameBoard)
+            // Here to ending if statement may not be propper fighting logic. 
+            // Flesh out how a proper fight should be simulated
+            // both players attack at the same time
+            // if one player no longer has pets, the round is over
+            // let i = 0
+            // let j = 0
+            // while (i < gameBoardCopy.length){
+            //     gameBoardCopy[i].health -= opponentGameBoard[j].attack
+            //     opponentGameBoard[j].health -= gameBoardCopy[i].attack
+            //     if(gameBoardCopy[i].checkDeath(gameBoardCopy)){
+            //         i++
+            //     }
+            //     if(typeof(gameBoardCopy[i]) == "undefined"){
+            //         break
+            //     }
+            //     if(opponentGameBoard[j].checkDeath(opponentGameBoard)){
+            //         j++
+            //     }
+            //     if(typeof(opponentGameBoard[j]) == "undefined"){
+            //         break
+            //     }
+            // }
+
             //create slowdown options to allow fight to be watchable and not an instant calculation
             if (typeof(gameBoardCopy[0]) == "undefined" || typeof(opponentGameBoard[0]) == "undefined"){
                 console.log("gameboard empty, player loss")
@@ -311,11 +438,14 @@ let gameBoard = shop(gold, round).initialRoll
         }
     }
     function winCondition(gameBoard){
-        console.log(`congratulations, you won with team ${gameBoard}`)
+        console.log(`congratulations, you won with the following team on round ${round}`)
+        console.log(gameBoard)
     }
     function loseCondition(gameBoard){
-        let finalGameBoard = JSON.stringify(gameBoard)
-        console.log(`you lost with team ${finalGameBoard}`)
+        // let finalGameBoard = JSON.stringify(gameBoard)
+        // console.log(`you lost with team ${finalGameBoard}`)
+        console.log(`Unfortunately you lost, you lost with the following team on round ${round}`)
+        console.log(gameBoard)
     }
 
 main()
