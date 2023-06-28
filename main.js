@@ -298,9 +298,9 @@ let gold = 10
 let gameBoard = [new Pet("Gorilla", 10, 10, 2, "is a gorilla", 4),new Pet("Gorilla", 10, 10, 2, "is a gorilla", 4),new Pet("Gorilla", 10, 10, 2, "is a gorilla", 4),new Pet("Gorilla", 10, 10, 2, "is a gorilla", 4),new Pet("Gorilla", 10, 10, 2, "is a gorilla", 4)]// shop(gold, round).initialRoll
     function main(){
         console.log("game running")
-        while(wins < 10 && health > 0 && round < 11){
+        while(wins < 10 && health > 0 && round <= 1){
             // gameBoard = shop(gold, round).roll()
-            console.log(gameBoard)
+           // console.log(gameBoard)
             console.log(`Current Round ${round}`)
             match()
             console.log(`Current wins: ${wins}`)
@@ -325,6 +325,47 @@ let gameBoard = [new Pet("Gorilla", 10, 10, 2, "is a gorilla", 4),new Pet("Goril
             // console.log(`Enemy:`)
             // console.log(enemyGameboard)
 
+    }
+
+    function match(){
+        console.log("match started")
+        let winBool = false;
+        let opponentGameBoard = findOpponent()
+        let gameBoardCopy = []
+        for(let i = 0; i < gameBoard.length; i++){
+            gameBoardCopy.push(gameBoard[i])
+        }
+        fight(gameBoardCopy, opponentGameBoard)
+        if(typeof(gameBoardCopy.at(0)) == "undefined" && typeof(opponentGameBoard.at(0)) == "undefined"){
+            console.log("draw")
+        }
+        else if(typeof(gameBoardCopy.at(0)) == "undefined"){
+            health--
+            console.log("loss")
+        }
+        else{
+            winBool = true
+            wins++
+            console.log("win")
+        }
+        if(wins === 10){
+            winCondition(gameBoard)
+        }
+        else if(health === 0){
+            loseCondition(gameBoard)
+        }else {
+            round++
+        }
+    }
+    function findOpponent(){
+        console.log("finding opponent...")
+        //Reminder that eventually health stage should be taken into account for finding opponent team
+        let healthCheck = health;
+        let opponentShop = shop()
+        //let opponentShop = new Shop(5, 10, tier, currentRound)
+        let opponentGameBoard = opponentShop.initialRoll.pets
+        console.log("opponent team generated")
+        return opponentGameBoard
     }
     function shop(){
         //make gold dynamic to account for gold pets
@@ -361,52 +402,28 @@ let gameBoard = [new Pet("Gorilla", 10, 10, 2, "is a gorilla", 4),new Pet("Goril
         return shop
     }
 
-    function match(){
-        console.log("match started")
-        let winBool = false;
-        let opponentGameBoard = findOpponent()
-        let gameBoardCopy = gameBoard.slice()
-        fight(gameBoardCopy, opponentGameBoard)
-        if(typeof(gameBoardCopy.at(0)) == "undefined" && typeof(opponentGameBoard.at(0)) == "undefined"){
-            console.log("draw")
-        }
-        else if(typeof(gameBoardCopy.at(0)) == "undefined"){
-            health--
-            console.log("loss")
-        }
-        else{
-            winBool = true
-            wins++
-            console.log("win")
-        }
-        if(wins === 10){
-            winCondition(gameBoard)
-        }
-        else if(health === 0){
-            loseCondition(gameBoard)
-        }else {
-            round++
-        }
-    }
-    function findOpponent(){
-        console.log("finding opponent...")
-        //Reminder that eventually health stage should be taken into account for finding opponent team
-        let healthCheck = health;
-        let opponentShop = shop()
-        //let opponentShop = new Shop(5, 10, tier, currentRound)
-        let opponentGameBoard = opponentShop.initialRoll.pets
-        console.log("opponent team generated")
-        return opponentGameBoard
-    }
     function fight(gameBoardCopy, opponentGameBoard){
         console.log("fight started")
         //console.log(gameBoard, opponentGameBoard)
         while(typeof(gameBoardCopy[0]) != "undefined" && typeof(opponentGameBoard[0]) != "undefined"){
             // Write Code To Simulate Fight
+                console.log("Before Fight: ")
+                console.log(gameBoard[0].health)
+                console.log(gameBoardCopy[0].health)
                 gameBoardCopy[0].health -= opponentGameBoard[0].attack
                 opponentGameBoard[0].health -= gameBoardCopy[0].attack
+                gameBoardCopy[0].attack -= 2
+                console.log("Attack Check: ")
+                console.log(gameBoard)
+                console.log(gameBoardCopy)
+                console.log("Before Check Death: ")
+                console.log(gameBoard[0].health)
+                console.log(gameBoardCopy[0].health)
                 gameBoardCopy[0].checkDeath(gameBoardCopy)
                 opponentGameBoard[0].checkDeath(opponentGameBoard)
+                console.log("After Check Death: ")
+                console.log(gameBoard[0].health)
+                console.log(gameBoardCopy[0].health)
             // Here to ending if statement may not be propper fighting logic. 
             // Flesh out how a proper fight should be simulated
             // both players attack at the same time
